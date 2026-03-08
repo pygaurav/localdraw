@@ -559,11 +559,11 @@ async function generateDiagramToCodeWithOpenAICompatible({
     }
 
     if (!String(texts || "").trim()) {
-      throw {
-        status: 400,
-        message:
-          "The configured model does not support image input and the frame contains no text to fall back on. Use a vision-capable model.",
-      };
+      const fallbackError = new Error(
+        "The configured model does not support image input and the frame contains no text to fall back on. Use a vision-capable model.",
+      );
+      fallbackError.status = 400;
+      throw fallbackError;
     }
 
     const payload = await requestOpenAICompatibleDiagramToCode({
@@ -615,10 +615,11 @@ async function generateDiagramToCodeWithAnthropic({
   const parsedImage = parseDataUrl(image);
 
   if (!parsedImage) {
-    throw {
-      status: 400,
-      message: "diagram image must be a base64 data URL",
-    };
+    const invalidImageError = new Error(
+      "diagram image must be a base64 data URL",
+    );
+    invalidImageError.status = 400;
+    throw invalidImageError;
   }
 
   const response = await fetch(getAnthropicMessagesEndpoint(baseUrl), {
@@ -672,42 +673,87 @@ async function generateDiagramToCodeWithOllama({
   const parsedImage = parseDataUrl(image);
 
   if (!parsedImage) {
-    throw {
-      status: 400,
-      message: "diagram image must be a base64 data URL",
-    };
+    const invalidImageError = new Error(
+      "diagram image must be a base64 data URL",
+    );
+    invalidImageError.status = 400;
+    throw invalidImageError;
   }
 
-  const response = await fetch(`${normalizeUrl(baseUrl)}/api/chat`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      stream: false,
-      messages: [
-        {
-          role: "system",
-          content: DIAGRAM_TO_CODE_SYSTEM_PROMPT,
-        },
-        {
-          role: "user",
-          content: buildDiagramToCodePrompt({ texts, theme }),
-          images: [parsedImage.base64],
-        },
-      ],
-      options: {
-        temperature: 0.2,
+  try {
+    const response = await fetch(`${normalizeUrl(baseUrl)}/api/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    }),
-  });
+      body: JSON.stringify({
+        model,
+        stream: false,
+        messages: [
+          {
+            role: "system",
+            content: DIAGRAM_TO_CODE_SYSTEM_PROMPT,
+          },
+          {
+            role: "user",
+            content: buildDiagramToCodePrompt({ texts, theme }),
+            images: [parsedImage.base64],
+          },
+        ],
+        options: {
+          temperature: 0.2,
+        },
+      }),
+    });
 
-  if (!response.ok) {
-    throw await parseProviderError(response);
+    if (!response.ok) {
+      throw await parseProviderError(response);
+    }
+
+    return requireHtmlOutput(getOllamaResponseText(await response.json()));
+  } catch (error) {
+    if (!shouldRetryDiagramToCodeAsTextOnly(error)) {
+      throw error;
+    }
+
+    if (!String(texts || "").trim()) {
+      const fallbackError = new Error(
+        "The configured model does not support image input and the frame contains no text to fall back on. Use a vision-capable model.",
+      );
+      fallbackError.status = 400;
+      throw fallbackError;
+    }
+
+    const response = await fetch(`${normalizeUrl(baseUrl)}/api/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        stream: false,
+        messages: [
+          {
+            role: "system",
+            content: DIAGRAM_TO_CODE_SYSTEM_PROMPT,
+          },
+          {
+            role: "user",
+            content: buildTextOnlyDiagramToCodePrompt({ texts, theme }),
+          },
+        ],
+        options: {
+          temperature: 0.2,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw await parseProviderError(response);
+    }
+
+    return requireHtmlOutput(getOllamaResponseText(await response.json()));
   }
-
-  return requireHtmlOutput(getOllamaResponseText(await response.json()));
 }
 
 /** GET /api/prefs — return current prefs */

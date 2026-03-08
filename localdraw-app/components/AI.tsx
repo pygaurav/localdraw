@@ -24,10 +24,9 @@ import {
   isLoadingChatsAtom,
 } from "@excalidraw/excalidraw/components/TTDDialog/useTTDChatStorage";
 
-import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
-
 import { DISK_STORAGE_SERVER_URL } from "../app_constants";
 import { DiskTTDAdapter } from "../data/TTDStorage";
+import { fetchOllamaDiagramToCode } from "../data/ollamaDiagramToCodeFetch";
 import { OllamaSettings } from "../data/OllamaSettings";
 import { ollamaStreamFetch } from "../data/ollamaStreamFetch";
 import {
@@ -35,6 +34,8 @@ import {
   AiModeSettings,
 } from "../data/OnlineModelSettings";
 import { onlineModelStreamFetch } from "../data/onlineModelStreamFetch";
+
+import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 
 const DEFAULT_CLOUD_AI_BACKEND = "https://oss-ai.excalidraw.com";
 
@@ -98,6 +99,24 @@ const getErrorMessage = (errorJSON: any, fallbackText: string) =>
   errorJSON?.error ||
   fallbackText;
 
+type DiagramToCodeFetchError = {
+  status: number;
+  text: string;
+  errorJSON: Record<string, any> | null;
+};
+
+type DiagramToCodeFetchResult =
+  | {
+      ok: true;
+      html: string;
+      usesCloudFallback: boolean;
+    }
+  | {
+      ok: false;
+      error: DiagramToCodeFetchError;
+      usesCloudFallback: boolean;
+    };
+
 const fetchDiagramToCode = async ({
   texts,
   image,
@@ -106,63 +125,28 @@ const fetchDiagramToCode = async ({
   texts: string;
   image: string;
   theme: "light" | "dark";
-}) => {
+}): Promise<DiagramToCodeFetchResult> => {
   const resolvedAiConfig = getResolvedAiConfig();
 
   if (resolvedAiConfig.mode === "ollama") {
     const { url, model } = resolvedAiConfig.ollamaConfig;
     return {
-      response: await fetch(
-        `${DISK_STORAGE_SERVER_URL}/api/ai/diagram-to-code/generate`,
-        {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            provider: "ollama",
-            baseUrl: url,
-            model,
-            texts,
-            image,
-            theme,
-          }),
-        },
-      ),
+      ok: true,
+      html: await fetchOllamaDiagramToCode({
+        baseUrl: url,
+        model,
+        texts,
+        image,
+        theme,
+      }),
       usesCloudFallback: false,
     };
   }
 
   if (resolvedAiConfig.mode === "online") {
     const { baseUrl, apiKey, model, apiFormat } = resolvedAiConfig.onlineConfig;
-    return {
-      response: await fetch(
-        `${DISK_STORAGE_SERVER_URL}/api/ai/diagram-to-code/generate`,
-        {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            provider: apiFormat === "anthropic" ? "anthropic" : "openai",
-            baseUrl,
-            apiKey,
-            model,
-            texts,
-            image,
-            theme,
-          }),
-        },
-      ),
-      usesCloudFallback: false,
-    };
-  }
-
-  return {
-    response: await fetch(
-      `${getCloudAiBackendUrl()}/v1/ai/diagram-to-code/generate`,
+    const response = await fetch(
+      `${DISK_STORAGE_SERVER_URL}/api/ai/diagram-to-code/generate`,
       {
         method: "POST",
         headers: {
@@ -170,12 +154,79 @@ const fetchDiagramToCode = async ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          provider: apiFormat === "anthropic" ? "anthropic" : "openai",
+          baseUrl,
+          apiKey,
+          model,
           texts,
           image,
           theme,
         }),
       },
-    ),
+    );
+
+    if (!response.ok) {
+      const text = await response.text();
+      return {
+        ok: false,
+        error: {
+          status: response.status,
+          text,
+          errorJSON: safelyParseJSON(text),
+        },
+        usesCloudFallback: false,
+      };
+    }
+
+    const { html } = await response.json();
+    if (!html) {
+      throw new Error("Generation failed (invalid response)");
+    }
+
+    return {
+      ok: true,
+      html,
+      usesCloudFallback: false,
+    };
+  }
+
+  const response = await fetch(
+    `${getCloudAiBackendUrl()}/v1/ai/diagram-to-code/generate`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        texts,
+        image,
+        theme,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    return {
+      ok: false,
+      error: {
+        status: response.status,
+        text,
+        errorJSON: safelyParseJSON(text),
+      },
+      usesCloudFallback: true,
+    };
+  }
+
+  const { html } = await response.json();
+  if (!html) {
+    throw new Error("Generation failed (invalid response)");
+  }
+
+  return {
+    ok: true,
+    html,
     usesCloudFallback: true,
   };
 };
@@ -221,23 +272,21 @@ export const AIComponents = ({
 
           const textFromFrameChildren = getTextFromElements(children);
 
-          const { response, usesCloudFallback } = await fetchDiagramToCode({
+          const result = await fetchDiagramToCode({
             texts: textFromFrameChildren,
             image: dataURL,
             theme: appState.theme,
           });
 
-          if (!response.ok) {
-            const text = await response.text();
-            const errorJSON = safelyParseJSON(text);
-
+          if (!result.ok) {
+            const { text, errorJSON, status } = result.error;
             if (!errorJSON) {
               throw new Error(text);
             }
 
             if (
-              usesCloudFallback &&
-              (response.status === 429 || errorJSON.statusCode === 429)
+              result.usesCloudFallback &&
+              (status === 429 || errorJSON.statusCode === 429)
             ) {
               return {
                 html: `<html>
@@ -258,18 +307,9 @@ export const AIComponents = ({
             throw new Error(getErrorMessage(errorJSON, text));
           }
 
-          try {
-            const { html } = await response.json();
-
-            if (!html) {
-              throw new Error("Generation failed (invalid response)");
-            }
-            return {
-              html,
-            };
-          } catch (error: any) {
-            throw new Error("Generation failed (invalid response)");
-          }
+          return {
+            html: result.html,
+          };
         }}
       />
 

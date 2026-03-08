@@ -420,9 +420,10 @@ export const OllamaSettingsDialog: React.FC = () => {
                 />
                 <span className="ollama-field__hint">
                   The model must be installed locally (e.g.{" "}
-                  <code>ollama pull llama3</code>). Models with larger context
-                  windows (e.g. <strong>mistral</strong>,{" "}
-                  <strong>llama3</strong>) work best.
+                  <code>ollama pull llama3.2-vision</code>). Wireframe to code
+                  works best with a <strong>vision-capable</strong> model.
+                  Non-vision models can only fall back to detected text from the
+                  frame.
                 </span>
               </div>
 
