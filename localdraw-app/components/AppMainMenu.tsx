@@ -10,14 +10,16 @@ import { LanguageList } from "../app-language/LanguageList";
 import { useSetAtom } from "../app-jotai";
 
 import { saveDebugState } from "./DebugCanvas";
-import { ollamaSettingsDialogOpenAtom } from "./OllamaSettingsDialog";
+import { aiPreferencesDialogOpenAtom } from "./AIPreferencesDialog";
+import { aiSettingsDialogOpenAtom } from "./AISettingsDialog";
 
 export const AppMainMenu: React.FC<{
   theme: Theme | "system";
   setTheme: (theme: Theme | "system") => void;
   refresh: () => void;
 }> = React.memo((props) => {
-  const openOllamaSettings = useSetAtom(ollamaSettingsDialogOpenAtom);
+  const openAiSettings = useSetAtom(aiSettingsDialogOpenAtom);
+  const openAiPreferences = useSetAtom(aiPreferencesDialogOpenAtom);
 
   return (
     <MainMenu>
@@ -48,10 +50,22 @@ export const AppMainMenu: React.FC<{
         </MainMenu.Item>
       )}
       <MainMenu.Separator />
-      <MainMenu.Item icon={brainIcon} onSelect={() => openOllamaSettings(true)}>
+      <MainMenu.Item icon={brainIcon} onSelect={() => openAiSettings(true)}>
         AI Settings
       </MainMenu.Item>
-      <MainMenu.DefaultItems.Preferences />
+      <MainMenu.DefaultItems.Preferences
+        additionalItems={
+          <>
+            <MainMenu.Separator />
+            <MainMenu.Item
+              icon={brainIcon}
+              onSelect={() => openAiPreferences(true)}
+            >
+              AI Provider Preferences
+            </MainMenu.Item>
+          </>
+        }
+      />
       <MainMenu.DefaultItems.ToggleTheme
         allowSystemTheme
         theme={props.theme}

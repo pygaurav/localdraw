@@ -1,6 +1,6 @@
 type DiagramToCodeTheme = "light" | "dark";
 
-interface FetchOllamaDiagramToCodeOptions {
+interface FetchOfflineDiagramToCodeOptions {
   baseUrl: string;
   model: string;
   texts: string;
@@ -229,14 +229,14 @@ async function requestOllamaDiagramToCode({
   return (await response.json()) as OllamaChatPayload;
 }
 
-export async function fetchOllamaDiagramToCode({
+export async function fetchOfflineDiagramToCode({
   baseUrl,
   model,
   texts,
   image,
   theme,
   signal,
-}: FetchOllamaDiagramToCodeOptions) {
+}: FetchOfflineDiagramToCodeOptions) {
   const parsedImage = parseDataUrl(image);
 
   if (!parsedImage) {

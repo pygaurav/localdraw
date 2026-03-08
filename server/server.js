@@ -307,6 +307,31 @@ async function writePrefsFile(data) {
   await fs.writeFile(PREFS_FILE, JSON.stringify(data, null, 2), "utf-8");
 }
 
+function isPlainObject(value) {
+  return Object.prototype.toString.call(value) === "[object Object]";
+}
+
+function deepMerge(target, source) {
+  if (!isPlainObject(target) || !isPlainObject(source)) {
+    return source;
+  }
+
+  const merged = { ...target };
+
+  for (const [key, value] of Object.entries(source)) {
+    if (value === undefined) {
+      continue;
+    }
+
+    merged[key] =
+      isPlainObject(merged[key]) && isPlainObject(value)
+        ? deepMerge(merged[key], value)
+        : value;
+  }
+
+  return merged;
+}
+
 const DIAGRAM_TO_CODE_MAX_TOKENS = 4096;
 const DIAGRAM_TO_CODE_SYSTEM_PROMPT = `
 You convert UI diagrams and wireframes into polished single-file HTML prototypes.
@@ -770,7 +795,7 @@ app.get("/api/prefs", async (_req, res) => {
 app.put("/api/prefs", async (req, res) => {
   try {
     const existing = await readPrefsFile();
-    const updated = { ...existing, ...req.body };
+    const updated = deepMerge(existing, req.body || {});
     await writePrefsFile(updated);
     res.json(updated);
   } catch (err) {

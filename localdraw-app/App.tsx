@@ -131,7 +131,8 @@ import DebugCanvas, {
 } from "./components/DebugCanvas";
 import { AIComponents } from "./components/AI";
 import { ExcalidrawPlusIframeExport } from "./ExcalidrawPlusIframeExport";
-import { OllamaSettingsDialog } from "./components/OllamaSettingsDialog";
+import { AIPreferencesDialog } from "./components/AIPreferencesDialog";
+import { AISettingsDialog } from "./components/AISettingsDialog";
 import {
   IconPicker,
   iconPickerAnchorAtom,
@@ -1562,7 +1563,8 @@ const ExcalidrawWrapper = () => {
             <Collab excalidrawAPI={excalidrawAPI} />
           )}
 
-          <OllamaSettingsDialog />
+          <AISettingsDialog />
+          <AIPreferencesDialog />
 
           {errorMessage && (
             <ErrorDialog onClose={() => setErrorMessage("")}>

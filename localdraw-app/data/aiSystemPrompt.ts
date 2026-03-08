@@ -1,7 +1,7 @@
 /**
  * Shared system prompt for all AI diagram generation backends.
  *
- * Imported by both ollamaStreamFetch.ts and onlineModelStreamFetch.ts so
+ * Imported by both aiOfflineStreamFetch.ts and onlineModelStreamFetch.ts so
  * the prompt is always in sync regardless of which AI mode is active.
  */
 

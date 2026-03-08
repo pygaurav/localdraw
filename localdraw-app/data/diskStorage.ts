@@ -181,13 +181,24 @@ export const flushSave = () => {
 // Preferences API (theme, language, etc.) — stored on disk, tab-independent
 // ---------------------------------------------------------------------------
 
-export interface OllamaConfig {
-  enabled: boolean;
+export interface OfflineModelConfig {
   url: string;
   model: string;
 }
 
-export interface OnlineModelConfig {
+export interface LegacyOllamaConfig extends OfflineModelConfig {
+  enabled: boolean;
+}
+
+export type AiProviderId =
+  | "openai"
+  | "anthropic"
+  | "groq"
+  | "together"
+  | "mistral"
+  | "custom";
+
+export interface AiProviderConfig {
   baseUrl: string;
   apiKey: string;
   model: string;
@@ -200,13 +211,31 @@ export interface OnlineModelConfig {
   apiFormat: "openai" | "anthropic";
 }
 
-export type AiMode = "default" | "ollama" | "online";
+export interface LegacyOnlineModelConfig extends AiProviderConfig {}
+
+export type AiMode = "offline" | "online";
+
+export interface AiSettings {
+  mode: AiMode;
+  onlineProvider: AiProviderId;
+  offlineModel: OfflineModelConfig;
+  onlineProviders: Record<AiProviderId, AiProviderConfig>;
+}
+
+export type PersistedAiSettings = Omit<
+  Partial<AiSettings>,
+  "offlineModel" | "onlineProviders"
+> & {
+  offlineModel?: Partial<OfflineModelConfig>;
+  onlineProviders?: Partial<Record<AiProviderId, Partial<AiProviderConfig>>>;
+};
 
 export interface AppPrefs {
   theme?: "light" | "dark" | "system";
-  ollamaSettings?: OllamaConfig;
-  onlineModelSettings?: OnlineModelConfig;
-  aiMode?: AiMode;
+  aiSettings?: PersistedAiSettings;
+  ollamaSettings?: LegacyOllamaConfig;
+  onlineModelSettings?: LegacyOnlineModelConfig;
+  aiMode?: AiMode | "ollama" | "default";
   defaultLibsSeeded?: boolean;
   collabUsername?: string;
   debugEnabled?: boolean;

@@ -2,11 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   extractHtmlDocument,
-  fetchOllamaDiagramToCode,
+  fetchOfflineDiagramToCode,
   shouldRetryDiagramToCodeAsTextOnly,
-} from "./ollamaDiagramToCodeFetch";
+} from "./aiOfflineDiagramToCodeFetch";
 
-describe("ollamaDiagramToCodeFetch", () => {
+describe("aiOfflineDiagramToCodeFetch", () => {
   let originalFetch: typeof global.fetch;
 
   beforeEach(() => {
@@ -48,7 +48,7 @@ describe("ollamaDiagramToCodeFetch", () => {
     );
 
     await expect(
-      fetchOllamaDiagramToCode({
+      fetchOfflineDiagramToCode({
         baseUrl: "http://localhost:11434",
         model: "llama3.2-vision",
         texts: "Login",
@@ -80,7 +80,7 @@ describe("ollamaDiagramToCodeFetch", () => {
       );
 
     await expect(
-      fetchOllamaDiagramToCode({
+      fetchOfflineDiagramToCode({
         baseUrl: "http://localhost:11434",
         model: "llama3",
         texts: "Settings page",
@@ -111,7 +111,7 @@ describe("ollamaDiagramToCodeFetch", () => {
     );
 
     await expect(
-      fetchOllamaDiagramToCode({
+      fetchOfflineDiagramToCode({
         baseUrl: "http://localhost:11434",
         model: "llama3",
         texts: "",

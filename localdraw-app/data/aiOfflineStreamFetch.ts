@@ -52,7 +52,7 @@ function buildMessages(messages: readonly LLMMessage[]): OllamaMessage[] {
   return [system, ...messages];
 }
 
-export async function ollamaStreamFetch(
+export async function offlineAIStreamFetch(
   options: OllamaStreamOptions,
 ): Promise<TTTDDialog.OnTextSubmitRetValue> {
   const { baseUrl, model, messages, onChunk, onStreamCreated, signal } =
