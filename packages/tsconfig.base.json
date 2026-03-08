@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "allowSyntheticDefaultImports": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "emitDeclarationOnly": true,
+    "paths": {
+      "@localdraw/common": ["./common/src/index.ts"],
+      "@localdraw/common/*": ["./common/src/*"],
+      "@localdraw/element": ["./element/src/index.ts"],
+      "@localdraw/element/*": ["./element/src/*"],
+      "@excalidraw/excalidraw": ["./localdraw/index.tsx"],
+      "@excalidraw/excalidraw/*": ["./localdraw/*"],
+      "@localdraw/math": ["./math/src/index.ts"],
+      "@localdraw/math/*": ["./math/src/*"],
+      "@localdraw/utils": ["./utils/src/index.ts"],
+      "@localdraw/utils/*": ["./utils/src/*"]
+    }
+  }
+}

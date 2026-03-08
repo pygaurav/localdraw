@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "rootDir": "./",
+    "target": "ESNext",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "types": ["vitest/globals", "@testing-library/jest-dom"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@localdraw/common": ["./packages/common/src/index.ts"],
+      "@localdraw/common/*": ["./packages/common/src/*"],
+      "@excalidraw/excalidraw": ["./packages/localdraw/index.tsx"],
+      "@excalidraw/excalidraw/*": ["./packages/localdraw/*"],
+      "@localdraw/element": ["./packages/element/src/index.ts"],
+      "@localdraw/element/*": ["./packages/element/src/*"],
+      "@localdraw/math": ["./packages/math/src/index.ts"],
+      "@localdraw/math/*": ["./packages/math/src/*"],
+      "@localdraw/utils": ["./packages/utils/src/index.ts"],
+      "@localdraw/utils/*": ["./packages/utils/src/*"]
+    }
+  },
+  "include": ["packages", "localdraw-app"],
+  "exclude": ["examples", "dist", "types", "tests"]
+}

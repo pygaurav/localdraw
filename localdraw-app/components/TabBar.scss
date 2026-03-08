@@ -1,0 +1,292 @@
+// ─── Shake animation (duplicate name rejected) ───────────────────────────────
+
+@keyframes tab-input-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-5px);
+  }
+  35% {
+    transform: translateX(5px);
+  }
+  55% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+// ─── Tab Bar ─────────────────────────────────────────────────────────────────
+
+.excalidraw-tab-bar {
+  display: flex;
+  align-items: stretch;
+  height: 38px;
+  background: var(--island-bg-color);
+  border-bottom: 1px solid var(--default-border-color);
+  overflow: hidden;
+  flex-shrink: 0;
+  user-select: none;
+  position: relative;
+  z-index: 10;
+
+  // ── Scrollable tabs row ─────────────────────────────────────────────────
+  &__tabs {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    padding: 0 6px;
+    gap: 1px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  // ── Single tab ──────────────────────────────────────────────────────────
+  &__tab {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 8px 0 11px;
+    min-width: 88px;
+    max-width: 172px;
+    height: 28px;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    color: var(--color-gray-50);
+    font-size: 0.8rem;
+    font-weight: 400;
+    letter-spacing: 0.015em;
+    transition: background 0.12s ease, color 0.12s ease;
+    border-radius: 5px 5px 0 0;
+    box-sizing: border-box;
+
+    // Colored bottom accent bar
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 4px;
+      right: 4px;
+      height: 2px;
+      border-radius: 2px 2px 0 0;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    &:hover {
+      background: var(--color-surface-low, rgba(0, 0, 0, 0.05));
+      color: var(--color-on-surface);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+
+    &--active {
+      background: var(--color-surface-low, rgba(0, 0, 0, 0.06));
+      color: var(--color-on-surface);
+      font-weight: 500;
+
+      &::after {
+        opacity: 1;
+      }
+    }
+  }
+
+  // ── Per-tab accent colors (bottom bar only) ─────────────────────────────
+  &__tab[data-color-idx="0"]::after {
+    background: #6965db;
+  } // violet
+  &__tab[data-color-idx="1"]::after {
+    background: #06b6d4;
+  } // cyan
+  &__tab[data-color-idx="2"]::after {
+    background: #10b981;
+  } // emerald
+  &__tab[data-color-idx="3"]::after {
+    background: #f59e0b;
+  } // amber
+  &__tab[data-color-idx="4"]::after {
+    background: #f43f5e;
+  } // rose
+  &__tab[data-color-idx="5"]::after {
+    background: #4f46e5;
+  } // indigo
+  &__tab[data-color-idx="6"]::after {
+    background: #f97316;
+  } // orange
+  &__tab[data-color-idx="7"]::after {
+    background: #14b8a6;
+  } // teal
+
+  // ── Tab label ───────────────────────────────────────────────────────────
+  &__tab-label {
+    flex: 1;
+    min-width: 0;
+    overflow-x: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    line-height: 1.35; /* room for descenders (e.g. g, y) */
+
+    &--editable {
+      cursor: text;
+    }
+  }
+
+  // ── Rename input ────────────────────────────────────────────────────────
+  &__tab-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-on-surface);
+    padding: 0;
+    min-width: 0;
+    width: 100%;
+    cursor: text;
+
+    &:focus {
+      border-bottom: 1.5px solid var(--color-primary);
+    }
+
+    &--shake {
+      animation: tab-input-shake 0.38s ease;
+      color: #e03131;
+      border-bottom-color: #e03131 !important;
+    }
+  }
+
+  // ── Close button ────────────────────────────────────────────────────────
+  &__tab-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--color-gray-40);
+    flex-shrink: 0;
+    padding: 0;
+    line-height: 1;
+    opacity: 0;
+    transition: background 0.1s ease, opacity 0.1s ease, color 0.1s ease;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.1);
+      color: var(--color-on-surface);
+    }
+  }
+
+  &__tab:hover &__tab-close,
+  &__tab--active &__tab-close {
+    opacity: 1;
+  }
+
+  // ── New-tab button — inline after the last tab ──────────────────────────
+  &__add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    cursor: pointer;
+    color: var(--color-gray-40);
+    margin-left: 3px;
+    padding: 0;
+    transition: background 0.1s ease, color 0.1s ease;
+
+    &:hover {
+      background: var(--color-surface-low, rgba(0, 0, 0, 0.07));
+      color: var(--color-on-surface);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+  }
+
+  // ── Dark mode ───────────────────────────────────────────────────────────
+  .theme--dark & {
+    background: var(--island-bg-color);
+    border-bottom-color: var(--color-border-outline-variant);
+
+    &__tab {
+      color: #7e7e96;
+      border-right-color: transparent;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: #d4d4e8;
+      }
+
+      &--active {
+        background: rgba(255, 255, 255, 0.08);
+        color: #e8e8f2;
+      }
+    }
+
+    &__tab-close {
+      color: #5a5a72;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: #c8c8dc;
+      }
+    }
+
+    &__add-btn {
+      color: #5a5a72;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #c8c8dc;
+      }
+    }
+
+    // Dark mode accent colors (lighter/softer)
+    &__tab[data-color-idx="0"]::after {
+      background: #9b98ff;
+    }
+    &__tab[data-color-idx="1"]::after {
+      background: #22d3ee;
+    }
+    &__tab[data-color-idx="2"]::after {
+      background: #34d399;
+    }
+    &__tab[data-color-idx="3"]::after {
+      background: #fbbf24;
+    }
+    &__tab[data-color-idx="4"]::after {
+      background: #fb7185;
+    }
+    &__tab[data-color-idx="5"]::after {
+      background: #818cf8;
+    }
+    &__tab[data-color-idx="6"]::after {
+      background: #fb923c;
+    }
+    &__tab[data-color-idx="7"]::after {
+      background: #2dd4bf;
+    }
+  }
+}

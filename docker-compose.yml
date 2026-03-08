@@ -1,0 +1,55 @@
+services:
+  # ── Frontend (Vite build served by nginx) ──────────────────────────────────
+  localdraw:
+    build:
+      context: .
+      args:
+        - NODE_ENV=production
+        # Proxy path: browser calls /api/* which nginx forwards to the backend.
+        # Set to empty string so the relative default is used in diskStorage.ts.
+        - VITE_SERVER_URL=
+    container_name: localdraw
+    ports:
+      - "80:80"
+      - "6001:80"
+    depends_on:
+      - localdraw-server
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── Disk Storage Backend (Express) ─────────────────────────────────────────
+  localdraw-server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: localdraw-server
+    ports:
+      - "6002:6002"
+    volumes:
+      # Named volume so scene files survive container restarts / rebuilds
+      - scenes_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-q",
+          "-O",
+          "/dev/null",
+          "http://localhost:6002/api/health",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    environment:
+      - PORT=6002
+
+volumes:
+  scenes_data:
+    driver: local
+  notused:
