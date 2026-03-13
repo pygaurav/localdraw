@@ -14,7 +14,7 @@ services:
       - "6001:80"
     depends_on:
       - localdraw-server
-    restart: on-failure
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost"]
       interval: 30s
